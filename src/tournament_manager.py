@@ -1,4 +1,3 @@
-from typing import List
 
 class OpponentException(Exception):
 
@@ -13,11 +12,11 @@ class OpponentException(Exception):
 
 class Team:
 
-    teams = []
+    teams: list = []
 
     def __init__(self, name: str):
 
-        self.opponents_remaining = []
+        self.opponents_remaining: list = []
         self.name = name
         self.rounds_rested = 0
 
@@ -39,11 +38,11 @@ class Team:
     
 class Arena:
 
-    arenas = []
+    arenas: list = []
 
     def __init__(self, name: str):
         self.name = name
-        self.games = []
+        self.games: list = []
         self.arenas.append(self)
 
     def add_game(self, game):
@@ -61,7 +60,7 @@ class Arena:
 
 class Round:
 
-    rounds = []
+    rounds: list = []
 
     def __init__(self):
 
@@ -79,14 +78,15 @@ class Round:
 
         @returns games: a list of games to be played this round
         """
-        games = []  # list for holding the games to be played this round
-        played = [] # list for holding teams that have already played this round
+        games: list = []  # holds the games to be played this round
+        played: list = [] # holds the teams that are already set up for play this round
 
         # make a new list of all teams
-        team_list = Team.teams.copy()
+        team_list: list = Team.teams.copy()
 
-        # sort teams on how many games they are rested
-        team_list.sort(key=self._sort_key_rounds_rested)
+        # sort teams on how many games they are rested to make resting time fair
+        team_list.sort(key=lambda team: team.rounds_rested)
+        #team_list.sort(key=self._sort_key_rounds_rested)
         for team in team_list:
             team.rounds_rested += 1
 
@@ -95,7 +95,7 @@ class Round:
         for arena in Arena.arenas:
             #print(arena.name, end=', ')
 
-            # iterate from most rested to least rested team in team_list
+            # iterate backwards from most rested to least rested team in team_list
             k=-1
             while k >= -len(team_list):
                 team = team_list[k]
@@ -103,9 +103,8 @@ class Round:
                 if team.has_opponents() and team not in played:
                     played, games, opponent = self.find_opponent(team, played, games, arena)
 
+                    # when opponent found, break of out of loop
                     if opponent:
-                        # opponent found, break of out of loop
-                        #k = -len(round_teams) - 1
                         break
                 k -= 1
             #print('')
@@ -132,7 +131,8 @@ class Round:
         --------------------------------------------------------------------------------------
         """
         # sort remaining opponents according to who has most games recently rested
-        team.opponents_remaining = sorted(team.opponents_remaining, reverse=True, key=self._sort_key_rounds_rested)
+        #team.opponents_remaining = sorted(team.opponents_remaining, reverse=True, key=self._sort_key_rounds_rested)
+        team.opponents_remaining = sorted(team.opponents_remaining, reverse=True, key=lambda team: team.rounds_rested)
         for opponent in team.opponents_remaining:
 
             if opponent not in played and team not in played:
@@ -158,8 +158,6 @@ class Round:
         return played, games, None
         #raise OpponentException('no suitable opponent found for team {}'.format(team.name))
     
-    def _sort_key_rounds_rested(self, team):
-        return team.rounds_rested
 
 
 class Game:
@@ -204,11 +202,11 @@ def initiate_test_data():
     for team_name in team_names:
         Team(team_name)
     
-    for team_a in Team.teams:
-        team_a.set_opponents()
+    for team in Team.teams:
+        team.set_opponents()
     
-    for arena_name in arena_names:
-        Arena(arena_name)
+    for arena in arena_names:
+        Arena(arena)
 
     #print_opponent_lists(Team.teams)
 
